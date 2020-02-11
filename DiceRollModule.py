@@ -6,6 +6,22 @@ from math import floor
 # not working:
 # attacks causing additional wounds
 
+def diceToNum(value):
+    # This converts dice rolls D6, 3D6 etc and gives a integer number out
+    value = str(value)
+    if 'D' in value:
+        if len(value) == 2:
+            tempDiceRoller = DiceRoller(int(value[1]))
+            return tempDiceRoller()
+        else:
+            temp = 0
+            tempDiceRoller = DiceRoller(int(value[2]))
+            for i in range(0, int(value[0])):
+                temp += tempDiceRoller
+            return temp
+    else:
+        return int(value)
+
 class DiceRoller:
     def __init__(self, maxValue):
         self.myMaxValue = maxValue
@@ -74,22 +90,6 @@ class SuccessObject:
        if diceValue >= diceRequirment:
            return bonusValue
        return 0
-
-    def _diceToNum(self, value):
-        # This converts dice rolls D6, 3D6 etc and gives a integer number out
-        value = str(value)
-        if 'D' in value:
-            if len(value) == 2:
-                tempDiceRoller = DiceRoller(int(value[1]))
-                return tempDiceRoller()
-            else:
-                temp = 0
-                tempDiceRoller = DiceRoller(int(value[2]))
-                for i in range(0, int(value[0])):
-                    temp += tempDiceRoller
-                return temp
-        else:
-            return int(value)
 
     def _applyReRoll(self, value):
         if self.myRerollType != 'none':
@@ -204,13 +204,13 @@ class Wounder(SuccessObject):
                 output += self.__generateDamageObject('normal', 0, rend)
                 return output
         if len(self.myExplodingDamage) != 0:
-            bonusDamage = self._diceToNum(self._doesItExplode(diceValue, self.myExplodingDamage[0],
+            bonusDamage = diceToNum(self._doesItExplode(diceValue, self.myExplodingDamage[0],
                                                        self.myExplodingDamageIsModified, self.myExplodingDamage[1]))
             if bonusDamage != 0:
                 output += self.__generateDamageObject('normal', bonusDamage)
                 return output
         if len(self.myMortalWounds) != 0:
-            numMortalWounds = self._diceToNum(self._doesItExplode(diceValue, self.myMortalWounds[0],
+            numMortalWounds = diceToNum(self._doesItExplode(diceValue, self.myMortalWounds[0],
                                                        self.myMortalWoundsIsModified, self.myMortalWounds[1]))
             output += self.__generateDamageObject('mortal', numMortalWounds)
         if len(self.myExplodingWounds) != 0:
