@@ -35,23 +35,30 @@ class DamageObject:
             self.myDamage = ceil(self.myDamage/2)
 
 
-class ModelObject(SuccessObject):
+class ModelObject():
     def __init__(self, wounds, fnp):
         self.myWoundCharacteristic = wounds
         self.myFnp = fnp
         self.myLostModelsCounter = 0
+        self.myTotalDamageRecieved = 0
         self.myRemainingWounds = self.myWoundCharacteristic
         self.myDiceRoller = DiceRoller(6)
 
-        def applyDamage(self, damage):
-            for i in range(0,damage):
-                diceValue = self.myDiceRoller()
-                if diceValue >= self.myFnp:
-                    damage -= 1
-            self.myRemainingWounds -= damage
-            if self.myRemainingWounds <= 0:
-                self.myRemainingWounds = self.myWoundCharacteristic
-                self.myLostModelsCounter += 1
+    def applyDamage(self, damage):
+        for i in range(0,damage):
+            diceValue = self.myDiceRoller()
+            if diceValue >= self.myFnp:
+                damage -= 1
+        self.myRemainingWounds -= damage
+        self.myTotalDamageRecieved += damage
+        if self.myRemainingWounds <= 0:
+            self.myRemainingWounds = self.myWoundCharacteristic
+            self.myLostModelsCounter += 1
+
+    def reset(self):
+        self.myTotalDamageRecieved = 0
+        self.myLostModelsCounter = 0
+        self.myRemainingWounds = self.myWoundCharacteristic
 
 
 class SuccessObject:
@@ -62,7 +69,7 @@ class SuccessObject:
         print("Success object created")
 
     def _doesItExplode(self, diceValue, diceRequirment, isModified, bonusValue):
-        # This function is a generic function to be called when a bonus occurs on a specific value, e.g. exploding 6s
+        # This function is a generic function to be called when a bonus occurs on a specific value, e.g. exploding  6s
        if isModified:
            diceValue = diceValue - self.myDiceModifier
        if diceValue >= diceRequirment:
@@ -129,14 +136,14 @@ class Hitter(SuccessObject):
         if self.myAutoSuccess:
             output.append('success')
             return output
-        if modifiedValue >= self.myAutoWoundModified:
+        if modifiedValue >= self.myAutoWound:
             output.append('wound')
             return output
         if len(self.myExplodingHits) != 0:
             output += ['success']*self._doesItExplode(value, self.myExplodingHits[0],
                                                         self.myExplodingHitsIsModified, self.myExplodingHits[1])
         if len(self.myMortalWound) != 0:
-            output += ['success'] * self._doesItExplode(value, self.myMortalWound[0],
+            output += ['mortal']*self._doesItExplode(value, self.myMortalWound[0],
                                                         self.myExplodingHitsIsModified, self.myMortalWound[1])
         if self._doISucceed(value):
             output.append('success')
@@ -216,7 +223,7 @@ class Wounder(SuccessObject):
                 output += self.__call__(newDice)
         return output
 
-class Saver(SuccessObject):
+class Saver():
     def __init__(self, armourSave, invunerableSave, fnp, wounds):
         self.myModelObject = ModelObject(wounds, fnp)
         self.myArmourSave = armourSave
@@ -226,25 +233,7 @@ class Saver(SuccessObject):
     def __call__(self, aDamageObject):
         diceRoll = self.myDiceRoller()
         if (diceRoll >= (self.myArmourSave + aDamageObject.myAp) or diceRoll >= self.myInvunerableSave) and diceRoll != 1:
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            return False
+        else:
+            self.myModelObject.applyDamage(aDamageObject.myDamage)
+            return False
