@@ -25,6 +25,34 @@ class DamageObject:
         self.myDamage = damage
         self.myAp = ap
 
+        def reduceDamage(self, value):
+            tempDamage = self.myDamage - value
+            if tempDamage < 1:
+                tempDamage = 1
+            self.myDamage = tempDamage
+
+        def halveDamage(self):
+            self.myDamage = ceil(self.myDamage/2)
+
+
+class ModelObject(SuccessObject):
+    def __init__(self, wounds, fnp):
+        self.myWoundCharacteristic = wounds
+        self.myFnp = fnp
+        self.myLostModelsCounter = 0
+        self.myRemainingWounds = self.myWoundCharacteristic
+        self.myDiceRoller = DiceRoller(6)
+
+        def applyDamage(self, damage):
+            for i in range(0,damage):
+                diceValue = self.myDiceRoller()
+                if diceValue >= self.myFnp:
+                    damage -= 1
+            self.myRemainingWounds -= damage
+            if self.myRemainingWounds <= 0:
+                self.myRemainingWounds = self.myWoundCharacteristic
+                self.myLostModelsCounter += 1
+
 
 class SuccessObject:
     def __init__(self, successRoll):
@@ -187,5 +215,36 @@ class Wounder(SuccessObject):
             if newDice is not None:
                 output += self.__call__(newDice)
         return output
+
+class Saver(SuccessObject):
+    def __init__(self, armourSave, invunerableSave, fnp, wounds):
+        self.myModelObject = ModelObject(wounds, fnp)
+        self.myArmourSave = armourSave
+        self.myInvunerableSave = invunerableSave
+        self.myDiceRoller = DiceRoller(6)
+
+    def __call__(self, aDamageObject):
+        diceRoll = self.myDiceRoller()
+        if (diceRoll >= (self.myArmourSave + aDamageObject.myAp) or diceRoll >= self.myInvunerableSave) and diceRoll != 1:
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
