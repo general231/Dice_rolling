@@ -66,7 +66,6 @@ class SuccessObject:
         self.mySuccessRoll = successRoll
         self.myDiceModifier = 0
         self.myRerollType = 'none'
-        print("Success object created")
 
     def _doesItExplode(self, diceValue, diceRequirment, isModified, bonusValue):
         # This function is a generic function to be called when a bonus occurs on a specific value, e.g. exploding  6s
@@ -78,6 +77,7 @@ class SuccessObject:
 
     def _diceToNum(self, value):
         # This converts dice rolls D6, 3D6 etc and gives a integer number out
+        value = str(value)
         if 'D' in value:
             if len(value) == 2:
                 tempDiceRoller = DiceRoller(int(value[1]))
@@ -181,7 +181,6 @@ class Wounder(SuccessObject):
         self.myExplodingDamageIsModified = False
         self.myMortalWounds = []
         self.myMortalWoundsIsModified = False
-        print("Wounder created")
 
     def __generateDamageObject(self, type, bonusDamage=0, bonusAp=0):
         output = []
@@ -194,20 +193,22 @@ class Wounder(SuccessObject):
     def __call__(self, diceValue, hitType):
         output = []
         if hitType == 'mortal':
-            output += self.__generateDamageObject('mortal')
+            output += self.__generateDamageObject('mortal',1)
             return output
         if hitType == 'wound':
             output += self.__generateDamageObject('normal')
             return output
         if len(self.myRending) != 0:
-            output += self.__generateDamageObject('normal', self.myBaseDamage, self._doesItExplode(diceValue,
-                                                       self.myRending[0], self.myRendingIsModified, self.myRending[1]))
-            return output
+            rend = self._doesItExplode(diceValue, self.myRending[0], self.myRendingIsModified, self.myRending[1])
+            if rend != 0:
+                output += self.__generateDamageObject('normal', 0, rend)
+                return output
         if len(self.myExplodingDamage) != 0:
             bonusDamage = self._diceToNum(self._doesItExplode(diceValue, self.myExplodingDamage[0],
                                                        self.myExplodingDamageIsModified, self.myExplodingDamage[1]))
-            output += self.__generateDamageObject('normal', self.myBaseDamage + bonusDamage)
-            return output
+            if bonusDamage != 0:
+                output += self.__generateDamageObject('normal', bonusDamage)
+                return output
         if len(self.myMortalWounds) != 0:
             numMortalWounds = self._diceToNum(self._doesItExplode(diceValue, self.myMortalWounds[0],
                                                        self.myMortalWoundsIsModified, self.myMortalWounds[1]))
@@ -232,8 +233,9 @@ class Saver():
 
     def __call__(self, aDamageObject):
         diceRoll = self.myDiceRoller()
-        if (diceRoll >= (self.myArmourSave + aDamageObject.myAp) or diceRoll >= self.myInvunerableSave) and diceRoll != 1:
-            return False
+        if (diceRoll >= (self.myArmourSave + aDamageObject.myAp) or diceRoll >= self.myInvunerableSave) and diceRoll != 1\
+                                                                            and aDamageObject.myType != 'mortal':
+            return True
         else:
             self.myModelObject.applyDamage(aDamageObject.myDamage)
             return False
