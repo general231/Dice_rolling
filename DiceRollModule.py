@@ -187,7 +187,8 @@ class Wounder(SuccessObject):
         if type == 'mortal':
             output += [DamageObject('mortal')]*bonusDamage
         else:
-            output.append(DamageObject(type, self.myBaseDamage+bonusDamage, self.myBaseAp+bonusAp))
+            damage = diceToNum(self.myBaseDamage)
+            output.append(DamageObject(type, damage+bonusDamage, self.myBaseAp+bonusAp))
         return output
 
     def __call__(self, diceValue, hitType):
@@ -197,6 +198,8 @@ class Wounder(SuccessObject):
             return output
         if hitType == 'wound':
             output += self.__generateDamageObject('normal')
+            return output
+        if hitType == 'fail':
             return output
         if len(self.myRending) != 0:
             rend = self._doesItExplode(diceValue, self.myRending[0], self.myRendingIsModified, self.myRending[1])
@@ -239,3 +242,48 @@ class Saver():
         else:
             self.myModelObject.applyDamage(aDamageObject.myDamage)
             return False
+
+
+class SystemObject:
+    def __init__(self, aHitter, aWounder, aSaver, numShots):
+        self.myHitter = aHitter
+        self.myWounder = aWounder
+        self.mySaver = aSaver
+        self.myNumShots = numShots
+        self.myDiceRoller = DiceRoller(6)
+        # variables storing statistics
+        self.myRunningHitSuccess = []
+        self.myTotalNumberShots = 0
+        self.myRunningWounds = []
+        self.mySaves = 0
+        self.myRecievedDamage = []
+        self.myLostModels = []
+
+    def __call__(self):
+        numShots = diceToNum(self.myNumShots)
+        self.myTotalNumberShots += numShots
+        diceValue = self.myDiceRoller(numShots)
+        hits = []
+        wounds = []
+        for j in diceValue:
+            hits += self.myHitter(j)
+        self.myRunningHitSuccess.append(hits.count('success'))
+        for j in hits:
+            wounds += self.myWounder(self.myDiceRoller(), j)
+        self.myRunningWounds.append(len(wounds))
+        for j in wounds:
+            if self.mySaver(j):
+                self.mySaves += 1
+        self.myLostModels.append(self.mySaver.myModelObject.myLostModelsCounter)
+        self.myRecievedDamage.append(self.mySaver.myModelObject.myTotalDamageRecieved)
+        self.mySaver.myModelObject.reset()
+
+    def finalise(self):
+        hitSuccessRate = 100 * sum(self.myRunningHitSuccess) / (self.myTotalNumberShots)
+        print(
+            "hits: " + str(sum(self.myRunningHitSuccess)) + " success rate:" + str(hitSuccessRate))
+        woundSuccessRate = 100 * sum(self.myRunningWounds) / (sum(self.myRunningHitSuccess))
+        print("wounds: " + str(sum(self.myRunningWounds)) + " success rate:" + str(woundSuccessRate))
+        saveSuccessRate = 100 * self.mySaves / sum(self.myRunningWounds)
+        print("saves: " + str(self.mySaves) + " success rate:" + str(saveSuccessRate))
+        print("Damage recieved: " + str(sum(self.myRecievedDamage)) + " lost models: " + str(sum(self.myLostModels)))

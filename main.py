@@ -1,26 +1,41 @@
 from DiceRollModule import *
+import seaborn as sb
+import matplotlib.pyplot as plt
 
+numIterations = 100000
 
+numShots = 12
+balisticSkill = 3
+reRolls = 'none'
+hitModifier = 0
+explodingSix = []
 
+strength = 10
+toughness = 5
+armourSave = 2
+invunSave = 8
+fnp = 7
+damage = 'D6'
+ap = 3
+woundCharacteristic = 4
+woundReRoll = 'none'
+# 553753
+# 209517
 
+aHitter = Hitter(balisticSkill)
+aHitter.myDiceModifier = hitModifier
+aHitter.myRerollType = reRolls
+aHitter.myExplodingHits = explodingSix
+aHitter.myExplodingHitsIsModified = False
 
-aDiceRoller = DiceRoller(6)
+aWounder = Wounder(strength, toughness, damage, ap)
 
-diceOut = aDiceRoller(200000)
+aSaver = Saver(armourSave, invunSave, fnp, woundCharacteristic)
 
-myHitter = Hitter(3)
-myHitter.myDiceModifier = -1
-#myHitter.myExplodingHits = [6]
-#myHitter.myMortalWoundUnmodified = 5
-myHitter.myRerollType = 'ones'
-suc = 0
-fai = 0
-for j in diceOut:
-    a = myHitter(j)
-    print(a)
-    if 'success' in a:
-        suc += len(a)
-    else:
-        fai += 1
+aSystemObject = SystemObject(aHitter, aWounder, aSaver, numShots)
 
-print("failures: " + str(fai) + " successes: " + str(suc) + " success rate: " + str(100 * suc / 200000) + "%")
+for i in range(0,numIterations):
+    aSystemObject()
+
+aSystemObject.finalise()
+

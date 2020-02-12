@@ -237,3 +237,5 @@ testSaver(testDamageObject)
 
 if testSaver.myModelObject.myRemainingWounds != 2 or testSaver.myModelObject.myLostModelsCounter != 1:
     raise Exception(testName)
+
+# Do I explode test, modified v unmodified, unmodified works even when impossible to hit
