@@ -6,6 +6,7 @@ from math import floor
 # not working:
 # attacks causing additional wounds
 
+# This converts a string representing a random or fixed value and converts it to an integer
 def diceToNum(value):
     # This converts dice rolls D6, 3D6 etc and gives a integer number out
     value = str(value)
@@ -22,6 +23,7 @@ def diceToNum(value):
     else:
         return int(value)
 
+# This object represents a dice roll, it will return a random integer in the range 1-self.maxValue
 class DiceRoller:
     def __init__(self, maxValue):
         self.myMaxValue = maxValue
@@ -34,23 +36,22 @@ class DiceRoller:
             dice_results.append(ceil(self.myMaxValue * rand.random()))
         return dice_results
 
-
 class DamageObject:
     def __init__(self, type, damage=1, ap=0):
         self.myType = type
         self.myDamage = damage
         self.myAp = ap
 
-        def reduceDamage(self, value):
-            tempDamage = self.myDamage - value
-            if tempDamage < 1:
-                tempDamage = 1
-            self.myDamage = tempDamage
+    def reduceDamage(self, value):
+        tempDamage = self.myDamage - value
+        if tempDamage < 1:
+            tempDamage = 1
+        self.myDamage = tempDamage
 
-        def halveDamage(self):
-            self.myDamage = ceil(self.myDamage/2)
+    def halveDamage(self):
+        self.myDamage = ceil(self.myDamage/2)
 
-
+# This object stores the statistics about the model being attacked and makes the FNP rolls
 class ModelObject():
     def __init__(self, wounds, fnp):
         self.myWoundCharacteristic = wounds
@@ -76,7 +77,8 @@ class ModelObject():
         self.myLostModelsCounter = 0
         self.myRemainingWounds = self.myWoundCharacteristic
 
-
+# This is the parent class for the Hitter and the Wounder class, it contains the common code for exploding dice,
+# rerolls and dice rolls
 class SuccessObject:
     def __init__(self, successRoll):
         self.mySuccessRoll = successRoll
@@ -113,7 +115,8 @@ class SuccessObject:
         else:
             return False
 
-
+# This object rolls the hit roll, it takes in a dice value and will return the number of hits out, the output is a
+# list, the possible values are 'fail', 'success', 'mortal' or 'wound'
 class Hitter(SuccessObject):
     def __init__(self, successRoll):
         super().__init__(successRoll)
@@ -155,7 +158,8 @@ class Hitter(SuccessObject):
                 output.append('fail')
         return output
 
-
+# This represnts the wound roll for the attack, it takes in the dice value and hit type and returns an array of
+# DamageObjects
 class Wounder(SuccessObject):
     def __init__(self, strength, toughness, baseDamage, baseAp):
         if strength == toughness:
@@ -227,6 +231,7 @@ class Wounder(SuccessObject):
                 output += self.__call__(newDice)
         return output
 
+# This object makes the saving roll, it takes in a damage object, and it returns true if successful
 class Saver():
     def __init__(self, armourSave, invunerableSave, fnp, wounds):
         self.myModelObject = ModelObject(wounds, fnp)
@@ -242,7 +247,6 @@ class Saver():
         else:
             self.myModelObject.applyDamage(aDamageObject.myDamage)
             return False
-
 
 class SystemObject:
     def __init__(self, aHitter, aWounder, aSaver, numShots):
@@ -286,4 +290,4 @@ class SystemObject:
         print("wounds: " + str(sum(self.myRunningWounds)) + " success rate:" + str(woundSuccessRate))
         saveSuccessRate = 100 * self.mySaves / sum(self.myRunningWounds)
         print("saves: " + str(self.mySaves) + " success rate:" + str(saveSuccessRate))
-        print("Damage recieved: " + str(sum(self.myRecievedDamage)) + " lost models: " + str(sum(self.myLostModels)))
+        print("Damage recieved: " + str(sum(self.myRecievedDamage)/len(self.myRecievedDamage)) + " lost models: " + str(sum(self.myLostModels)/len(self.myLostModels)))

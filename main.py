@@ -1,6 +1,4 @@
-from DiceRollModule import *
-import seaborn as sb
-import matplotlib.pyplot as plt
+from Dice_rolling.DiceRollModule import Hitter, Wounder, Saver, SystemObject
 
 numIterations = 100000
 
@@ -38,4 +36,5 @@ for i in range(0,numIterations):
     aSystemObject()
 
 aSystemObject.finalise()
+
 
